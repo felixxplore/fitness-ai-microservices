@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const initialState = {
-  user: JSON.parse(localStorage.getItem("user")) || null,
+  user:localStorage.getItem("user")
+  ? JSON.parse(localStorage.getItem("user"))
+  : null,
   token: localStorage.getItem("token") || null,
   userId: localStorage.getItem("userId") || null,
   isAuthenticated: false,
@@ -18,9 +20,9 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.userId = action.payload.user.sub;
 
-      localStorage.setItem("token", JSON.stringify(action.payload.token));
-      localStorage.setItem("user", JSON.stringify(action.payload.user));
-      localStorage.setItem("userId", JSON.stringify(action.payload.user.sub));
+      localStorage.setItem("token",  action.payload.token );
+      localStorage.setItem("user",  JSON.stringify(action.payload.user) );
+      localStorage.setItem("userId",  action.payload.user.sub );
     },
     logout: (state) => {
       state.token = null;
