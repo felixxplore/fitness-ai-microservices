@@ -5,6 +5,7 @@ import com.fitness.activityservice.dto.ActivityResponse;
 import com.fitness.activityservice.service.ActivityService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,7 @@ public class ActivityController {
     }
 
     @PostMapping
-    public ResponseEntity<ActivityResponse> trackActivity(@RequestBody ActivityRequest request,@RequestHeader("X-User-Id") String userId){
+    public ResponseEntity<ActivityResponse> trackActivity (@RequestBody ActivityRequest request, @RequestHeader("X-User-Id") String userId){
         request.setUserId(userId);
         return ResponseEntity.ok(activityService.trackActivity(request));
     }

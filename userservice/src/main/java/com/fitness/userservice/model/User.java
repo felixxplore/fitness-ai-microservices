@@ -21,8 +21,8 @@ public class User {
     @Column(unique = true,nullable = false)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
+//    @Column(nullable = false)
+//    private String password;
 
 
     private String firstName;
@@ -31,10 +31,20 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role=UserRole.USER;
 
-    @CreationTimestamp
+
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

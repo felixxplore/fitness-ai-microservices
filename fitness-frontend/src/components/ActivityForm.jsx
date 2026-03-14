@@ -7,10 +7,13 @@ import {
   Select,
   TextField,
 } from "@mui/material";
-import React, { act, useState } from "react";
-import { addActivity } from "../services/api";
+import React, { act, useContext, useState } from "react";
+import { addActivity, getActivities } from "../services/api";
+import { AuthContext } from "react-oauth2-code-pkce";
 
 const ActivityForm = ({ onActivityAdded }) => {
+  const { token } = useContext(AuthContext);
+
   const [activity, setActivity] = useState({
     type: "RUNNING",
     duration: "",
@@ -21,8 +24,8 @@ const ActivityForm = ({ onActivityAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await addActivity(activity);
-      onActivityAdded();
+      await addActivity(activity, token);
+        onActivityAdded();
       setActivity({
         type: "RUNNING",
         duration: "",

@@ -1,26 +1,28 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api";
+const API_URL = "http://localhost:8085/api";
 
 const api = axios.create({
   baseURL: API_URL,
 });
+ 
+export const getActivities = (token) =>
+  axios.get(`${API_URL}/activities`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-api.interceptors.request.use((config) => {
-  const userId = localStorage.getItem("userId");
-const token = localStorage.getItem("token");
-  if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
-  }
+export const addActivity = (activity, token) =>
+  axios.post(`${API_URL}/activities`, activity, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-  if (userId) {
-    config.headers["X-User-ID"] = userId;
-  }
-
-  return config;
-});
-
-export const getActivities = () => api.get("/activities");
-export const addActivity = (activity) => api.post("/activities", activity);
-export const getActivityDetail = (id) =>
-  api.get(`/recommendations/activity/${id}`);
+export const getActivityDetail = (id, token) =>
+  axios.get(`${API_URL}/recommendations/activity/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });

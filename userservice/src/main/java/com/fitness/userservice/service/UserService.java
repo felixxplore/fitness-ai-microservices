@@ -8,6 +8,7 @@ import com.fitness.userservice.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -15,6 +16,8 @@ public class UserService {
     
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private KeycloakService keycloakService;
 
     public UserResponse getUserProfile(String userId) {
 
@@ -32,45 +35,48 @@ public class UserService {
         return userResponse;
     }
 
+    @Transactional
     public UserResponse register(RegisterRequest request) {
 
-        log.info("user service register api called");
-        if(userRepository.existsByEmail(request.getEmail())){
-            User existingUser = userRepository.findByEmail(request.getEmail());
-            UserResponse userResponse=new UserResponse();
-            userResponse.setId(existingUser.getId());
-            userResponse.setKeycloakId(existingUser.getKeycloakId());
-            userResponse.setEmail(existingUser.getEmail());
-            userResponse.setFirstName(existingUser.getFirstName());
-            userResponse.setLastName(existingUser.getLastName());
-            userResponse.setCreatedAt(existingUser.getCreatedAt());
-            userResponse.setUpdatedAt(existingUser.getUpdatedAt());
+        log.info("User service register API called");
 
-            return userResponse;
+        if(userRepository.existsByEmail(request.getEmail())){
+            throw new RuntimeException("User already exists");
         }
 
-        User user=new User();
+        String keycloakId = keycloakService.createUser(request);
+
+        if(keycloakId == null){
+            throw new RuntimeException("Error creating user in Keycloak");
+        }
+
+        User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setKeycloakId(request.getKeycloakId());
+        user.setKeycloakId(keycloakId);
 
-        User savedUser = userRepository.save(user);
-        UserResponse userResponse=new UserResponse();
-        userResponse.setKeycloakId(savedUser.getKeycloakId());
-        userResponse.setId(savedUser.getId());
-        userResponse.setEmail(savedUser.getEmail());
-        userResponse.setFirstName(savedUser.getFirstName());
-        userResponse.setLastName(savedUser.getLastName());
-        userResponse.setCreatedAt(savedUser.getCreatedAt());
-        userResponse.setUpdatedAt(savedUser.getUpdatedAt());
+        User savedUser = userRepository.saveAndFlush(user);
 
-        return userResponse;
+        return mapToResponse(savedUser);
     }
-
     public Boolean existByUserId(String userId) {
         log.info("Calling User validation api for userId : {}",userId);
         return userRepository.existsByKeycloakId(userId);
+    }
+
+    private UserResponse mapToResponse(User user){
+
+        UserResponse response = new UserResponse();
+
+        response.setId(user.getId());
+        response.setKeycloakId(user.getKeycloakId());
+        response.setEmail(user.getEmail());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setCreatedAt(user.getCreatedAt());
+        response.setUpdatedAt(user.getUpdatedAt());
+
+        return response;
     }
 }

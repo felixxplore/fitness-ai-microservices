@@ -1,18 +1,20 @@
 import { Box, Card, CardContent, Divider, Typography } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { useParams } from 'react-router';
 import { getActivityDetail } from '../services/api';
+import { AuthContext } from 'react-oauth2-code-pkce';
 
 const ActivityDetail = () => {
 
   const { id } = useParams();
   const [activity, setActivity] = useState(null);
   const [recommendation, setRecommendation] = useState(null);
+   const { token  } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchActivityDetail = async () => {
       try {
-        const response = await getActivityDetail(id);
+        const response = await getActivityDetail(id,token);
         setActivity(response.data);
         setRecommendation(response.data.recommendation);
       } catch (error) {
