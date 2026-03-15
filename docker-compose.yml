@@ -1,0 +1,144 @@
+services:
+
+  keycloak-postgres:
+    image: postgres:15
+    container_name: keycloak-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - fitness-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak-postgres
+    networks:
+      - fitness-network
+
+  postgres-user:
+    image: postgres:15
+    container_name: postgres-user
+    environment:
+      POSTGRES_DB: fitness_user_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
+    networks:
+      - fitness-network
+
+  mongodb-activity:
+    image: mongo:7
+    container_name: mongodb-activity
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_activity_data:/data/db
+    networks:
+      - fitness-network
+
+  mongodb-recommendation:
+    image: mongo:7
+    container_name: mongodb-recommendation
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_recommendation_data:/data/db
+    networks:
+      - fitness-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - fitness-network
+
+#  config-server:
+#    build: ./config-server
+#    container_name: config-server
+#    ports:
+#      - "8888:8888"
+#    networks:
+#      - fitness-network
+#
+#  eureka:
+#    build: ./eureka
+#    container_name: eureka
+#    ports:
+#      - "8761:8761"
+#    depends_on:
+#      - config-server
+#    networks:
+#      - fitness-network
+#
+#  gateway:
+#    build: ./gateway
+#    container_name: gateway
+#    ports:
+#      - "8085:8085"
+#    depends_on:
+#      - eureka
+#      - keycloak
+#    networks:
+#      - fitness-network
+#
+#  userservice:
+#    build: ./userservice
+#    container_name: userservice
+#    depends_on:
+#      - postgres-user
+#      - eureka
+#    networks:
+#      - fitness-network
+#
+#  activityservice:
+#    build: ./activityservice
+#    container_name: activityservice
+#    depends_on:
+#      - mongodb-activity
+#      - rabbitmq
+#      - eureka
+#    networks:
+#      - fitness-network
+#
+#  aiservice:
+#    build: ./aiservice
+#    container_name: aiservice
+#    depends_on:
+#      - mongodb-recommendation
+#      - rabbitmq
+#      - eureka
+#    networks:
+#      - fitness-network
+
+volumes:
+  keycloak_data:
+  user_postgres_data:
+  mongo_activity_data:
+  mongo_recommendation_data:
+
+networks:
+  fitness-network:
