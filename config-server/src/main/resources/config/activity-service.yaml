@@ -4,11 +4,14 @@ spring:
       host: mongodb-activity
       port: 27017
       database: fitness_activity_db
+      username: ${MONGO_USER}
+      password: ${MONGO_PASSWORD}
+      authentication-database: admin
   rabbitmq:
     host: rabbitmq
     port: 5672
-    username: guest
-    password: guest
+    username: ${RABBITMQ_DEFAULT_USER:guest}
+    password: ${RABBITMQ_DEFAULT_PASS:guest}
   cloud:
     loadbalancer:
       retry:
@@ -17,7 +20,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
     fetch-registry: true      # ← must be true (default is true, but verify)
     register-with-eureka: true
   instance:

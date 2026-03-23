@@ -1,144 +1,241 @@
 services:
 
+  # ================= DATABASES =================
+
   keycloak-postgres:
     image: postgres:15
-    container_name: keycloak-postgres
     environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: ${KC_DB}
+      POSTGRES_USER: ${KC_USER}
+      POSTGRES_PASSWORD: ${KC_PASSWORD}
     volumes:
       - keycloak_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
     networks:
       - fitness-network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KC_USER} -d ${KC_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:24.0
-    container_name: keycloak
-    command: start-dev
-    environment:
-      KC_DB: postgres
-      KC_DB_URL_HOST: keycloak-postgres
-      KC_DB_URL_DATABASE: keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-    ports:
-      - "8080:8080"
-    depends_on:
-      - keycloak-postgres
-    networks:
-      - fitness-network
 
   postgres-user:
     image: postgres:15
-    container_name: postgres-user
     environment:
-      POSTGRES_DB: fitness_user_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${USER_DB}
+      POSTGRES_USER: ${USER_DB_USER}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
     volumes:
       - user_postgres_data:/var/lib/postgresql/data
     networks:
       - fitness-network
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d ${USER_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
 
   mongodb-activity:
     image: mongo:7
-    container_name: mongodb-activity
-    ports:
-      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: fitness_activity_db
     volumes:
       - mongo_activity_data:/data/db
     networks:
       - fitness-network
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "${MONGO_USER}", "-p", "${MONGO_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
 
   mongodb-recommendation:
     image: mongo:7
-    container_name: mongodb-recommendation
-    ports:
-      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: fitness_recommendation_db
     volumes:
       - mongo_recommendation_data:/data/db
     networks:
       - fitness-network
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
     ports:
-      - "5672:5672"
+      - "27018:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "${MONGO_USER}", "-p", "${MONGO_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+
+  # ================= INFRA =================
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"   # ✅ fixes Windows cookie permission issue
+    ports:
       - "15672:15672"
+      - "5672:5672"  # ✅ add this port too for services to connect
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq   # ✅ add named volume
+    networks:
+      - fitness-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s   # ✅ add start_period
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command: start-dev --import-realm          # ✅ auto import realm on startup
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-postgres
+      KC_DB_URL_DATABASE: ${KC_DB}
+      KC_DB_USERNAME: ${KC_USER}
+      KC_DB_PASSWORD: ${KC_PASSWORD}
+      KEYCLOAK_ADMIN: ${KC_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/:/opt/keycloak/data/import/
+    depends_on:
+      keycloak-postgres:
+        condition: service_healthy
+    networks:
+      - fitness-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health/ready"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s   # keycloak is slow to start
+
+  # ================= INFRA SERVICES =================
+
+  config-server:
+    build: ./config-server
+    env_file:
+      - .env
+    ports:
+      - "8888:8888"
+    networks:
+      - fitness-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8888/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 90s   # ✅ gives Spring Boot time to start before checking
+
+  eureka-server:
+    build: ./eureka
+    env_file:
+      - .env
+    ports:
+      - "8761:8761"
+    depends_on:
+      config-server:
+        condition: service_healthy   # ✅ waits for config server
+    networks:
+      - fitness-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  gateway:
+    build: ./gateway
+    env_file:
+      - .env
+    ports:
+      - "8085:8085"
+    depends_on:
+      eureka-server:
+        condition: service_healthy   # ✅ waits for eureka
+      keycloak:
+        condition: service_healthy
+    networks:
+      - fitness-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8085/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ================= MICROSERVICES =================
+
+  userservice:
+    build: ./userservice
+    env_file:
+      - .env
+    depends_on:
+      postgres-user:
+        condition: service_healthy   # ✅ waits for DB
+      eureka-server:
+        condition: service_healthy   # ✅ waits for eureka
     networks:
       - fitness-network
 
-#  config-server:
-#    build: ./config-server
-#    container_name: config-server
-#    ports:
-#      - "8888:8888"
-#    networks:
-#      - fitness-network
-#
-#  eureka:
-#    build: ./eureka
-#    container_name: eureka
-#    ports:
-#      - "8761:8761"
-#    depends_on:
-#      - config-server
-#    networks:
-#      - fitness-network
-#
-#  gateway:
-#    build: ./gateway
-#    container_name: gateway
-#    ports:
-#      - "8085:8085"
-#    depends_on:
-#      - eureka
-#      - keycloak
-#    networks:
-#      - fitness-network
-#
-#  userservice:
-#    build: ./userservice
-#    container_name: userservice
-#    depends_on:
-#      - postgres-user
-#      - eureka
-#    networks:
-#      - fitness-network
-#
-#  activityservice:
-#    build: ./activityservice
-#    container_name: activityservice
-#    depends_on:
-#      - mongodb-activity
-#      - rabbitmq
-#      - eureka
-#    networks:
-#      - fitness-network
-#
-#  aiservice:
-#    build: ./aiservice
-#    container_name: aiservice
-#    depends_on:
-#      - mongodb-recommendation
-#      - rabbitmq
-#      - eureka
-#    networks:
-#      - fitness-network
+  activityservice:
+    build: ./activityservice
+    env_file:
+      - .env
+    depends_on:
+      mongodb-activity:
+        condition: service_healthy   # ✅ fixed mongo name
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - fitness-network
 
+  aiservice:
+    build: ./aiservice
+    env_file:
+      - .env
+    depends_on:
+      mongodb-recommendation:
+        condition: service_healthy   # ✅ fixed mongo name
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - fitness-network
+
+# ======================== volumes ===================
 volumes:
   keycloak_data:
   user_postgres_data:
-  mongo_activity_data:
+  mongo_activity_data:          # ← was mongo_data
   mongo_recommendation_data:
+  rabbitmq_data: # ← new
+
+# ================= NETWORK =================
 
 networks:
   fitness-network:

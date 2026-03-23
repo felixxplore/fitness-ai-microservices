@@ -1,8 +1,15 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres-user:5432/fitness_user_db
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://postgres-user:5432/${USER_DB}
+    username: ${USER_DB_USER}
+    password: ${USER_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 300000        # 5 minutes
+      max-lifetime: 600000        # 10 minutes ✅ prevents closed connection issue
+      connection-timeout: 20000   # 20 seconds
+      keepalive-time: 60000       # 1 minute ✅ keeps connection alive
   jpa:
     hibernate:
       ddl-auto: update
@@ -10,7 +17,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}  # ← YE ADD KARO
