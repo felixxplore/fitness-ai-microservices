@@ -1,0 +1,66 @@
+{
+  "realm" : "fitness-realm",
+  "users" : [ {
+    "id" : "2714cfdd-292e-432a-ae3e-f74a9b447633",
+    "username" : "service-account-fitness-user-service",
+    "emailVerified" : false,
+    "createdTimestamp" : 1774707657144,
+    "enabled" : true,
+    "totp" : false,
+    "serviceAccountClientId" : "fitness-user-service",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-fitness-realm" ],
+    "clientRoles" : {
+      "realm-management" : [ "manage-users" ],
+      "fitness-user-service" : [ "uma_protection" ]
+    },
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "fc339144-3b57-4b0f-92c1-fa69af53f531",
+    "username" : "user1@gmail.com",
+    "firstName" : "user1",
+    "lastName" : "user1",
+    "email" : "user1@gmail.com",
+    "emailVerified" : false,
+    "createdTimestamp" : 1774708288943,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "02aa4cd4-3f62-4d6d-b8d8-7ce313417353",
+      "type" : "password",
+      "createdDate" : 1774708289943,
+      "secretData" : "{\"value\":\"wPbfOU8M6qqcVxfSj5myzlTWss3hMu1rNf70UNez+WS63aIB4UtjD/e2Fc0vyBKfu2hNEpa/ixBqqiNxD1/XbQ==\",\"salt\":\"Lwhzkc36wmfLGHlopmh33A==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-fitness-realm" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "6692947d-c16a-4331-81f1-06559f1c659d",
+    "username" : "user2@gmail.com",
+    "firstName" : "user2",
+    "lastName" : "user2",
+    "email" : "user2@gmail.com",
+    "emailVerified" : false,
+    "createdTimestamp" : 1774711682621,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "2677f9c8-7cf0-4699-8790-9fc27c91cb0d",
+      "type" : "password",
+      "createdDate" : 1774711685127,
+      "secretData" : "{\"value\":\"MRBOqoL/TkbkE2tv4rMP0ZQo/yYMe4NkR5AB45KLfxOQD4qW0ugM9idAiRe/senGTxAk9MenIraum8Nj8erO/Q==\",\"salt\":\"Ierxr9VqBOkKIORbwT9I0g==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-fitness-realm" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ]
+}
