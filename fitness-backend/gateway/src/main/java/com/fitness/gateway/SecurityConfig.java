@@ -26,7 +26,10 @@ public class SecurityConfig {
                         .pathMatchers("/actuator/**").permitAll()
                         .pathMatchers("/api/users/register").permitAll()
                         .anyExchange().authenticated())
-                .oauth2ResourceServer(oauth2->oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2->oauth2
+                        .jwt(jwt -> jwt
+                                .jwkSetUri("http://keycloak:8080/realms/fitness-realm/protocol/openid-connect/certs")
+                        ))
                 .build();
 
     }

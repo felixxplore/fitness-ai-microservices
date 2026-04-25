@@ -28,6 +28,6 @@ public class UserHeaderFilter implements WebFilter {
                             .build();
 
                     return chain.filter(exchange.mutate().request(request).build());
-                });
+                }).switchIfEmpty(chain.filter(exchange));
     }
 }

@@ -1,5 +1,5 @@
 export const authConfig = {
-  clientId: "fitness-user-service",
+  clientId: "fitness-frontend",
   authorizationEndpoint:
     "http://localhost:8080/realms/fitness-realm/protocol/openid-connect/auth",
   tokenEndpoint:

@@ -21,5 +21,10 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}  # ← YE ADD KARO
+keycloak:
+  server-url: http://keycloak:8080
+  realm: fitness-realm
+  client-id: fitness-user-service
+  client-secret: PZTPhWsLTbzkAFrSdUYKFwqMteJ0vL4T
 server:
   port: 8084
