@@ -1,8 +1,6 @@
 # Fitness AI Microservices (Backend)
 
-Demo video: <https://YOUR_DEMO_VIDEO_LINK_HERE>
-
-AI-powered fitness backend built with Spring Boot microservices (service discovery + centralized config), Keycloak authentication, RabbitMQ messaging, and PostgreSQL/MongoDB persistence.
+Demo video: coming soon
 
 ## Overview
 
@@ -11,6 +9,7 @@ This project solves the common problem of **turning raw fitness activity logs in
 - tracks activities per user,
 - asynchronously generates AI-driven feedback and next-workout suggestions,
 - and stores those recommendations so the frontend can show them instantly.
+- AI-powered fitness backend built with Spring Boot microservices (service discovery + centralized config), Keycloak authentication, RabbitMQ messaging, and PostgreSQL/MongoDB persistence.
 
 It’s built as a microservices system to keep **activity tracking, user management, and AI processing** independently scalable and deployable.
 
